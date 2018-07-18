@@ -1,0 +1,9 @@
+package functors
+
+sourcedir = src
+
+modules = Data.Functor.NatTrans
+        , Data.Functor.Product
+        , Data.Functor.Coproduct
+        , Data.Functor.Compose
+        , Data.Functor.Day
