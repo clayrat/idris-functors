@@ -1,6 +1,7 @@
 module Data.Functor.Coproduct
 
 import Data.Functor.NatTrans
+import Control.Comonad
 
 %access public export
 %default total
@@ -25,10 +26,12 @@ bihoistCoproduct natF natG (RightF ga) = RightF (natG ga)
   map f (LeftF fa)  = LeftF (map f fa)
   map f (RightF ga) = RightF (map f ga)
 
+(Comonad f, Comonad g) => Comonad (Coproduct f g) where
+  extract = coproduct extract extract
+  extend f = coproduct (LeftF . extend (f . LeftF)) (RightF . extend (f . RightF))
+
 (Foldable f, Foldable g) => Foldable (Coproduct f g) where
   foldr f z = coproduct (foldr f z) (foldr f z)  
 
 (Traversable f, Traversable g) => Traversable (Coproduct f g) where
   traverse f = coproduct (map LeftF . traverse f) (map RightF . traverse f)  
-
--- TODO comonad

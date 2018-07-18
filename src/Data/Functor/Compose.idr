@@ -31,7 +31,7 @@ Show (f (g a)) => Show (Compose f g a) where
 (Traversable f, Traversable g) => Traversable (Compose f g) where
     traverse f (MkCompose fga) = map MkCompose $ traverse (traverse f) fga
 
--- rightfolded composition
+-- rightfolded self-composition
  
 data ComposeRF : (f : Type -> Type) -> Nat -> (Type -> Type) where
   CRFZ : a -> ComposeRF f Z a
@@ -47,19 +47,19 @@ Applicative f => Applicative (ComposeRF f n) where
   (CRFZ f) <*> (CRFZ x) = CRFZ $ f x
   (CRFS fs) <*> (CRFS xs) = CRFS $ fs <*> xs
   
--- leftfolded composition
+-- leftfolded self-composition
 
 data ComposeLF : (f : Type -> Type) -> Nat -> (Type -> Type) where
   CLFZ : a -> ComposeLF f Z a
   CLFS : ComposeLF f n (f a) -> ComposeLF f (S n) a
 
 Functor f => Functor (ComposeLF f n) where
-  map h (CLFZ a) = CLFZ (h a)
-  map h (CLFS r) = CLFS (map (map h) r)
+  map h (CLFZ a) = CLFZ $ h a
+  map h (CLFS r) = CLFS $ map (map h) r
 
 Applicative f => Applicative (ComposeLF f n) where
   pure {n=Z}   a = CLFZ a
-  pure {n=S k} a = CLFS (pure (pure a))
-  (CLFZ f) <*> (CLFZ x) = CLFZ (f x)
-  (CLFS fs) <*> (CLFS xs) = CLFS (liftA2 (<*>) fs xs)
+  pure {n=S _} a = CLFS $ pure (pure a)
+  (CLFZ f) <*> (CLFZ x) = CLFZ $ f x
+  (CLFS fs) <*> (CLFS xs) = CLFS $ [| fs <*> xs |]
   

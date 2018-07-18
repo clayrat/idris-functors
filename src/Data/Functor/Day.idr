@@ -1,6 +1,8 @@
 module Data.Functor.Day
 
 import Control.Monad.Identity
+import Control.Comonad
+import Control.Comonad.Trans
 import Data.Functor.NatTrans
 import Data.Functor.Pairing
 
@@ -40,7 +42,7 @@ introDayL : f ~> Day Identity f
 introDayL = day id (Id id)
 
 introDayR : f ~> Day f Identity
-introDayR f = day (flip apply) f (Id id) --day (\x, y => ?wat) f (Id id)
+introDayR f = day (flip apply) f (Id id)
 
 elimDayL : Functor f => Day Identity f ~> f
 elimDayL (MkDay get (Id x) fy) = get x <$> fy
@@ -51,11 +53,13 @@ elimDayR (MkDay get fx (Id y)) = flip get y <$> fx
 symDay : Day f g ~> Day g f
 symDay (MkDay get fx gy) = day (flip get) gy fx
 
-assoclDay : Day f (Day g h) ~> Day (Day f g) h
-assoclDay (MkDay phi fx (MkDay psi gy hz)) = day id (day (\a, b, c => phi a (psi b c)) fx gy) hz
+assocDayL : Day f (Day g h) ~> Day (Day f g) h
+assocDayL (MkDay phi fx (MkDay psi gy hz)) = 
+  day id (day (\a, b, c => phi a (psi b c)) fx gy) hz
 
-assocrDay : Day (Day f g) h ~> Day f (Day g h)
-assocrDay (MkDay phi (MkDay psi fx gy) hz) = day (flip apply) fx (day (\a, b, c => phi (psi c a) b) gy hz)
+assocDayR : Day (Day f g) h ~> Day f (Day g h)
+assocDayR (MkDay phi (MkDay psi fx gy) hz) = 
+  day (flip apply) fx (day (\a, b, c => phi (psi c a) b) gy hz)
 
 Functor (Day f g) where
   map f (MkDay get fx gy) = day (\x, y => f (get x y)) fx gy
@@ -67,3 +71,11 @@ Functor (Day f g) where
         [| MkPair f1 f2 |] 
         [| MkPair g1 g2 |]
 
+(Comonad f, Comonad g) => Comonad (Day f g) where
+  extract (MkDay get fx gy) = 
+    get (extract fx) (extract gy)
+  extend f (MkDay get fx gy) = 
+    map f $ day (day get) (duplicate fx) (duplicate gy)
+
+Comonad f => ComonadTrans (Day f) where
+  lower (MkDay get fx gy) = get (extract fx) <$> gy

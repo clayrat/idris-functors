@@ -2,6 +2,8 @@ package functors
 
 sourcedir = src
 
+opts = "-p comonad"
+
 modules = Data.Functor.NatTrans
         , Data.Functor.Product
         , Data.Functor.Coproduct
