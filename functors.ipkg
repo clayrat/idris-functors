@@ -9,3 +9,4 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Coproduct
         , Data.Functor.Compose
         , Data.Functor.Day
+        , Data.Functor.Yoneda
