@@ -1,6 +1,8 @@
 module Data.Functor.Kan
 
 import Control.Monad.Identity
+import Control.Isomorphism
+import Data.Functor.Day
 
 %access public export
 %default total
@@ -31,8 +33,9 @@ Functor (Lan j g) where
 Yoneda' : (f : Type -> Type) -> (a : Type) -> Type
 Yoneda' = Ran Identity
 
---data Codensity : (m : Type -> Type) -> (a : Type) -> Type where
---  Codense : ({b : Type} -> (a -> m b) -> m b) -> Codensity m a
+--record Codensity (m : Type -> Type) (a : Type) where
+--  constructor Codense
+--  runCodensity : {b : Type} -> (a -> m b) -> m b
   
 Codensity' : (f : Type -> Type) -> (a : Type) -> Type
 Codensity' f = Ran f f
@@ -48,9 +51,43 @@ Coyoneda' = Lan Identity
 Density' : (f : Type -> Type) -> (a : Type) -> Type
 Density' f = Lan f f
 
+-- Dijkstra monad
+
+record Dijkstra (s : Type) (x : Type) where
+  constructor MkDijkstra 
+  runDijkstra : {a : Type} -> (x -> s -> a) -> s -> a
+
+Functor (Dijkstra s) where
+  map f (MkDijkstra r) = MkDijkstra $ \bsa => r (bsa . f) 
+
+Applicative (Dijkstra s) where
+  pure a = MkDijkstra (\f => f a)
+  (MkDijkstra rf) <*> (MkDijkstra ra) = MkDijkstra $ \bsa => rf (\ab => ra (bsa . ab)) 
+
+Monad (Dijkstra s) where
+  (MkDijkstra r) >>= f = MkDijkstra $ \bsa => r (\a => runDijkstra (f a) bsa)
+    
+Dijkstra' : (s : Type) -> (x : Type) -> Type
+Dijkstra' s = Ran (\a => s -> a) (\a => s -> a)
+
+-- TODO
 {-  
-  CrossProduct f g a b ~ Tuple (f a) (g b)
-  CrossCoproduct f g a b ~ Either (f a) (g b)
+record CrossProduct (f : Type -> Type) (g : Type -> Type) (a : Type) (b : Type) where
+  constructor MkCrossProd
+  runCrossProduct : (f a, g b)
+
+record CrossCoproduct (f : Type -> Type) (g : Type -> Type) (a : Type) (b : Type) where
+  constructor MkCrossCoprod
+  runCrossProduct : Either (f a) (g b)
+
+daylan : Iso (Day f g a) (Lan (Pair x) (CrossProduct f g x) a)
+daylan = MkIso to fro toFro froTo 
+  where
+  to : Day f g a -> Lan (Pair x) (CrossProduct f g x) a
+  to (MkDay {x} {y} h fx gy) = MkLan ?wat ?wat2 --(MkCrossProd (fx, gy))
+  fro : Lan (Pair x) (CrossProduct f g x) a -> Day f g a
+  toFro : (z : Lan (Pair x) (CrossProduct f g x) a) -> to (fro z) = z
+  froTo : (z : Day f g a) -> fro (to z) = z
   
   Day f g       ~ Lan Tuple  (CrossProduct f g)
   Product f g   ~ Lan Either (CrossProduct f g)

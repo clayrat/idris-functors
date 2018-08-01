@@ -2,7 +2,7 @@ package functors
 
 sourcedir = src
 
-opts = "-p comonad"
+opts = "-p contrib -p comonad"
 
 modules = Data.Functor.NatTrans
         , Data.Functor.Product
@@ -10,3 +10,5 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Compose
         , Data.Functor.Day
         , Data.Functor.Yoneda
+        , Data.Functor.Kan
+        , Data.Functor.Adjunction

@@ -8,6 +8,9 @@ import Data.Functor.NatTrans
 data Compose : (f : b -> c) -> (g : a -> b) -> (x : a) -> Type where
   MkCompose : f (g a) -> Compose f g a
 
+runCompose : Compose f g a -> f (g a)
+runCompose (MkCompose fga) = fga
+
 bihoistCompose : Functor f => (f ~> h) -> (g ~> i) -> Compose f g ~> Compose h i
 bihoistCompose natF natG (MkCompose fga) = MkCompose (natF (map natG fga))  
 
