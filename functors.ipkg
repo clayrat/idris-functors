@@ -12,3 +12,4 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Yoneda
         , Data.Functor.Kan
         , Data.Functor.Adjunction
+        , Data.FSMCat
