@@ -69,6 +69,11 @@ data IState : State -> Type where
 data Reach : (p, q, r : t -> Type) -> t -> Type where
   R : p i -> (q :-> r) -> Reach p q r i
 
+infixr 2 :>>:
+
+(:>>:) : (p, q, r : t -> Type) -> t -> Type
+(:>>:) = Reach
+
 IFunctor (Reach p q) where
   imap f (R pi g) = R pi (f . g)
 
@@ -76,6 +81,50 @@ data ISum : (f, g : (i -> Type) -> o -> Type) -> (i -> Type) -> o -> Type where
   InL : f p i -> ISum f g p i
   InR : g p i -> ISum f g p i
 
+infixr 3 :+:
+
+(:+:) : (f, g : (i -> Type) -> o -> Type) -> (i -> Type) -> o -> Type
+(:+:) = ISum
+
 (IFunctor f, IFunctor g) => IFunctor (ISum f g) where
-  imap h (InL fpi) = InL $ imap f fpi
-  imap h (InR gpi) = InR $ imap f gpi
+  imap h (InL fpi) = InL $ imap h fpi
+  imap h (InR gpi) = InR $ imap h gpi
+
+FilePath : Type
+FilePath = String
+
+FH : (State -> Type) -> State -> Type
+FH =     ((AtKey FilePath Closed) :>>: IState)            --fOpen
+     :+: ((AtKey () Open) :>>: (AtKey (Maybe Char) Open)) --fGetC
+     :+: ((AtKey () Open) :>>: (AtKey () Closed))         --fClose
+
+data IFree : ((i -> Type) -> i -> Type) -> (i -> Type) -> i -> Type where
+  Ret : p i -> IFree f p i
+  Do : f (IFree f p) i -> IFree f p i
+
+infixr 3 :*
+
+(:*) : ((i -> Type) -> i -> Type) -> (i -> Type) -> i -> Type 
+(:*) = IFree
+
+IFunctor f => IFunctor (IFree f) where
+  imap     h (Ret pi)     = Ret $ h pi
+  imap {t} h (Do {p} fpi) = Do $ imap {s=IFree f p} {t=IFree f t} (imap h) fpi
+
+IFunctor f => IMonad (IFree f) where
+  iskip = Ret 
+  iextend     h (Ret pi)     = h pi
+  iextend {q} h (Do {p} fpi) = Do $ imap {s=IFree f p} {t=IFree f q} (iextend h) fpi
+
+syntax FOpen [p] [k] = Do (InL (R (V p) k))
+syntax FGetC [k] = Do (InR (InL (R (V ()) k)))
+syntax FClose [k] = Do (InR (InR (R (V ()) k)))
+
+fOpen : FilePath -> (FH :* IState) Closed
+fOpen p = FOpen p Ret
+
+fGetC : (FH :* (AtKey (Maybe Char) Open)) Open
+fGetC = FGetC Ret 
+
+fClose : (FH :* (AtKey () Closed)) Open
+fClose = FClose Ret
