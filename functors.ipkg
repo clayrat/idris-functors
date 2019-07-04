@@ -2,7 +2,7 @@ package functors
 
 sourcedir = src
 
-opts = "-p contrib -p comonad"
+opts = "-p contrib -p comonad -p bifunctors -p profunctors"
 
 modules = Data.Functor.NatTrans
         , Data.Functor.Product
@@ -13,3 +13,11 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Kan
         , Data.Functor.Adjunction
         , Data.FSMCat
+        , KleisliArr.Basic
+        , KleisliArr.Free
+        , KleisliArr.Freer
+        , Main
+        
+executable = run
+
+main = Main

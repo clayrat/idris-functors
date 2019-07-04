@@ -8,8 +8,6 @@ import Interfaces.Verified
 %access public export
 %default total
 
--- from https://marcinszamotulski.me/posts/finite-state-machines.html
-
 infixr 4 :.:
 
 data Cat : (k -> k -> k) -> k -> k -> Type where
