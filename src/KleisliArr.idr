@@ -153,10 +153,14 @@ runFH (FOpen s k) = catch
     (IOM (fgetc h) >>= \c => openFH (k $ V $ Just c) h)
     (\_ => openFH (k $ V Nothing) h)
 
-interface IFunctor m => IApplicative (m : (t -> Type) -> t -> Type) where
+interface IFunctor m => IApplicative (m : (p -> Type) -> p -> Type) where
   pure : x -> Atkey m i i x
   (<*>) : Atkey m i j (s -> t) -> Atkey m j k s -> Atkey m i k t
 
 IFunctor f => IApplicative ((:*) f) where
   pure = ireturn
   mf <*> ms = mf =>= \f => ms =>= \s => ireturn $ f s
+
+readOpenFile : (FH :* (String := Open)) Open
+readOpenFile = fGetC =>= 
+  maybe [| "" |] (\c => [| (strCons c) readOpenFile |])
