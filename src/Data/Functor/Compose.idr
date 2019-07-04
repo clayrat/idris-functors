@@ -29,10 +29,10 @@ Show (f (g a)) => Show (Compose f g a) where
   (MkCompose a) <|> (MkCompose b) = MkCompose $ a <|> b
 
 (Foldable f, Foldable g) => Foldable (Compose f g) where
-    foldr f i (MkCompose fga) = foldr (flip (foldr f)) i fga  
+  foldr f i (MkCompose fga) = foldr (flip (foldr f)) i fga  
 
 (Traversable f, Traversable g) => Traversable (Compose f g) where
-    traverse f (MkCompose fga) = map MkCompose $ traverse (traverse f) fga
+  traverse f (MkCompose fga) = map MkCompose $ traverse (traverse f) fga
 
 -- rightfolded self-composition
  

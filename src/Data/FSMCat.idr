@@ -8,7 +8,7 @@ import Interfaces.Verified
 %access public export
 %default total
 
-// from https://marcinszamotulski.me/posts/finite-state-machines.html
+-- from https://marcinszamotulski.me/posts/finite-state-machines.html
 
 infixr 4 :.:
 

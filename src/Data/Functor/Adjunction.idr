@@ -41,24 +41,22 @@ Adjunction (Pair s) (Morphism s) where
   counit (s, Mor sa) = sa s
 
 -- TODO next 2 already exist in latest stdlib  
-interface Functor f => VerifiedFunctor' (f : Type -> Type) where
-  functorIdentity' : {a : Type} -> (g : a -> a) -> ((v : a) -> g v = v) -> (x : f a) -> map g x = x
-
-VerifiedFunctor (Pair a) where
-  functorIdentity (a,b) = Refl
-  functorComposition (a,b) g1 g2 = Refl  
+-- interface Functor f => VerifiedFunctor' (f : Type -> Type) where
+--   functorIdentity' : {a : Type} -> (g : a -> a) -> ((v : a) -> g v = v) -> (x : f a) -> map g x = x
+-- 
+-- VerifiedFunctor (Pair a) where
+--   functorIdentity (a,b) = Refl
+--   functorComposition (a,b) g1 g2 = Refl  
 
 postulate
 funext : {a,b : Type} -> {f, g : a -> b} -> ((x : a) -> f x = g x) -> f = g
 
 VerifiedFunctor (Morphism r) where
-  functorIdentity (Mor ra) = cong $ funext {f=\x => ra x} {g=ra} $ \x => Refl
+--  functorIdentity (Mor ra) = cong $ funext {f=\x => ra x} {g=ra} $ \x => Refl
+  functorIdentity g p (Mor ra) = cong $ funext {f=\x =>g (ra x)} {g=ra} $ \x => p (ra x)
   functorComposition (Mor ra) g1 g2 = Refl
-
-VerifiedFunctor' (Morphism r) where
-  functorIdentity' g p (Mor ra) = cong $ funext {f=\x =>g (ra x)} {g=ra} $ \x => p (ra x)
 
 VerifiedAdjunction (Pair s) (Morphism s) where
   counitUnit (_, _) = Refl
-  unitCounit x@(Mor _) = functorIdentity x
+  unitCounit x@(Mor _) = functorIdentity' x
 

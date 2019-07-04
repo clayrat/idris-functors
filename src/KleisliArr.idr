@@ -2,7 +2,11 @@
 
 module KleisliArr
 
+import Control.Catchable
+import Control.IOExcept
 import Data.Vect
+
+%access public export
 
 infixr 1 :->
 
@@ -10,7 +14,7 @@ infixr 1 :->
 (:->) {t} a b = {i : t} -> a i -> b i
 
 Vec : Type -> Nat -> Type
-Vec a n = Vect n a
+Vec = flip Vect
 
 vmap : (a -> b) -> (Vec a :-> Vec b)
 vmap f = map f 
@@ -29,8 +33,13 @@ IFunctor Path where
 data AtKey : Type -> x -> x -> Type where
   V : a -> AtKey a i i
 
+infixr 2 :=
+
+(:=) : Type -> x -> x -> Type
+(:=) = AtKey
+
 List' : Type -> Type 
-List' a = Path (AtKey a ((),())) ((),()) 
+List' a = Path (a := ((),())) ((),()) 
 
 interface IFunctor m => IMonad (m : (t -> Type) -> t -> Type) where
   iskip : p :-> m p
@@ -46,7 +55,7 @@ c ?>= f = iextend f c
 
 infixr 2 =>=
 
-(=>=) : IMonad m => m (AtKey a j) i -> (a -> m q j) -> m q i
+(=>=) : IMonad m => m (a := j) i -> (a -> m q j) -> m q i
 c =>= f = c ?>= \(V a) => f a
 
 interface IxMonad (m : t -> t -> Type -> Type) where 
@@ -54,10 +63,13 @@ interface IxMonad (m : t -> t -> Type -> Type) where
   ixbind : m i j a -> (a -> m j k b) -> m i k b
 
 Atkey : ((t -> Type) -> t -> Type) -> t -> t -> Type -> Type 
-Atkey m i j a = m (AtKey a j) i
+Atkey m i j a = m (a := j) i
+
+ireturn : IMonad m => a -> Atkey m i i a
+ireturn = iskip . V
 
 [atk] IMonad m => IxMonad (Atkey m) where
-  ixpure {i} = iskip {p=AtKey x i} . V {i}
+  ixpure = ireturn
   ixbind = (=>=)
 
 data State = Open | Closed
@@ -94,9 +106,9 @@ FilePath : Type
 FilePath = String
 
 FH : (State -> Type) -> State -> Type
-FH =     ((AtKey FilePath Closed) :>>: IState)            --fOpen
-     :+: ((AtKey () Open) :>>: (AtKey (Maybe Char) Open)) --fGetC
-     :+: ((AtKey () Open) :>>: (AtKey () Closed))         --fClose
+FH =     ((FilePath := Closed) :>>: IState)         --fOpen
+     :+: ((() := Open) :>>: ((Maybe Char) := Open)) --fGetC
+     :+: ((() := Open) :>>: (() := Closed))         --fClose
 
 data IFree : ((i -> Type) -> i -> Type) -> (i -> Type) -> i -> Type where
   Ret : p i -> IFree f p i
@@ -123,8 +135,28 @@ syntax FClose [k] = Do (InR (InR (R (V ()) k)))
 fOpen : FilePath -> (FH :* IState) Closed
 fOpen p = FOpen p Ret
 
-fGetC : (FH :* (AtKey (Maybe Char) Open)) Open
+fGetC : (FH :* ((Maybe Char) := Open)) Open
 fGetC = FGetC Ret 
 
-fClose : (FH :* (AtKey () Closed)) Open
+fClose : (FH :* (() := Closed)) Open
 fClose = FClose Ret
+
+runFH : (FH :* (a := Closed)) Closed -> IOExcept FileError a 
+runFH (Ret (V a)) = pure a
+runFH (FOpen s k) = catch
+  (IOM (openFile s Read) >>= openFH (k IOpen)) 
+  (\_ => runFH (k IClosed))
+  where
+  openFH : (FH :* (a := Closed)) Open -> File -> IOExcept FileError a
+  openFH (FClose k) h = ioe_lift (closeFile h) *> runFH (k $ V ())
+  openFH (FGetC k) h = catch
+    (IOM (fgetc h) >>= \c => openFH (k $ V $ Just c) h)
+    (\_ => openFH (k $ V Nothing) h)
+
+interface IFunctor m => IApplicative (m : (t -> Type) -> t -> Type) where
+  pure : x -> Atkey m i i x
+  (<*>) : Atkey m i j (s -> t) -> Atkey m j k s -> Atkey m i k t
+
+IFunctor f => IApplicative ((:*) f) where
+  pure = ireturn
+  mf <*> ms = mf =>= \f => ms =>= \s => ireturn $ f s
