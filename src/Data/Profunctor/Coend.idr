@@ -7,7 +7,7 @@ import Data.Bifunctor.Join
 %default partial
 
 data Coend : (hom : a -> a -> Type) -> Type where 
-    MkCoend : {a : Type} -> Joined hom a -> Coend hom
+  MkCoend : {a : Type} -> Joined hom a -> Coend hom
 
 intoCoend : Profunctor hom => hom a a -> Coend hom
 intoCoend hom = MkCoend $ Join hom 

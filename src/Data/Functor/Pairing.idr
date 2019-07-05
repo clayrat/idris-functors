@@ -17,7 +17,7 @@ Pairing : (Type -> Type) -> (Type -> Type) -> Type
 Pairing f g = {a, b, c : Type} -> (a -> b -> c) -> f a -> g b -> c
 
 zap : Pairing f g -> f (a -> b) -> g a -> b
-zap p = p apply
+zap p = p id
 
 ||| Pairing is symmetric
 symPair : Pairing f g -> Pairing g f
@@ -48,3 +48,16 @@ writerTraced p f (WR writer) (MkTracedT gf) =
   p (\aw, f1 => f (Basics.fst aw) (f1 (snd aw))) writer gf
 
 -- TODO freeCofree 
+
+Pairing2 : (Type -> Type -> Type) -> (Type -> Type -> Type) -> Type
+Pairing2 p q = {a,b,c,d,e : Type} -> (a -> c -> e) -> (b -> d -> e) -> p a b -> q c d -> e
+
+bizap : Pairing2 p q -> p (a -> c) (b -> c) -> q a b -> c
+bizap p2 = p2 id id
+
+symPair2 : Pairing2 f g -> Pairing2 g f
+symPair2 p2 ff gg gab fcd = p2 (flip ff) (flip gg) fcd gab
+
+pairEitherPair : Pairing2 Pair Either
+pairEitherPair ff _  (a,_) (Left c)  = ff a c
+pairEitherPair _  gg (_,b) (Right d) = gg b d
