@@ -5,7 +5,7 @@ import Data.Functor.NatTrans
 %access public export
 %default total
 
-data Compose : (f : b -> c) -> (g : a -> b) -> (x : a) -> Type where
+data Compose : (f : b -> c) -> (g : a -> b) -> a -> Type where
   MkCompose : f (g a) -> Compose f g a
 
 runCompose : Compose f g a -> f (g a)

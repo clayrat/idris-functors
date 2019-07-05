@@ -19,9 +19,9 @@ interface (Functor f, Functor g) => Adjunction (f : Type -> Type) (g : Type -> T
   left f = map f . unit
   right f = counit . map f
 
-interface (VerifiedFunctor f, VerifiedFunctor g, Adjunction f g) => VerifiedAdjunction (f : Type -> Type) (g : Type -> Type) where
-  counitUnit : (x : f a) -> counit {f} {g} (map Adjunction.unit x) = x
-  unitCounit : (x : g a) -> map (counit {f} {g}) (unit x) = x    
+(Adjunction f1 g1, Adjunction f2 g2) => Adjunction (Compose f2 f1) (Compose g1 g2) where
+  unit = MkCompose . map (map MkCompose . unit) . unit {f=f1} {g=g1}
+  counit = counit {f=f2} {g=g2} . map (counit . map runCompose) . runCompose
 
 [adjapp] Adjunction f g => Applicative (Compose g f) where
   pure = MkCompose . unit
@@ -39,6 +39,10 @@ Adjunction f g => Comonad (Compose f g) where
 Adjunction (Pair s) (Morphism s) where
   unit a = Mor $ \s => (s, a)
   counit (s, Mor sa) = sa s
+
+interface (VerifiedFunctor f, VerifiedFunctor g, Adjunction f g) => VerifiedAdjunction (f : Type -> Type) (g : Type -> Type) where
+  counitUnit : (x : f a) -> counit {f} {g} (map Adjunction.unit x) = x
+  unitCounit : (x : g a) -> map (counit {f} {g}) (unit x) = x    
 
 -- TODO next 2 already exist in latest stdlib  
 -- interface Functor f => VerifiedFunctor' (f : Type -> Type) where
@@ -59,4 +63,3 @@ VerifiedFunctor (Morphism r) where
 VerifiedAdjunction (Pair s) (Morphism s) where
   counitUnit (_, _) = Refl
   unitCounit x@(Mor _) = functorIdentity' x
-

@@ -7,6 +7,8 @@ import Control.Monad.Writer
 import Control.Comonad.Store
 import Control.Comonad.Env
 import Control.Comonad.Traced
+import Data.Functor.Adjunction
+import Data.Functor.Compose
 import Data.Functor.Product
 import Data.Functor.Coproduct
 
@@ -27,10 +29,20 @@ symPair p f ga fb = p (flip f) fb ga
 idPair : Pairing Identity Identity
 idPair f (Id a) (Id b) = f a b
 
+strength : Functor f => a -> f b -> f (a, b)
+strength a = map (MkPair a)
+
+adjPair : Adjunction f g => Pairing f g
+adjPair ff fa gb = 
+  uncurry ff $ counit $ map (uncurry $ flip strength) $ strength gb fa
+
 ||| Functor products pair with functor coproducts
 productCoproduct : Pairing f1 g1 -> Pairing f2 g2 -> Pairing (Product f1 f2) (Coproduct g1 g2)
 productCoproduct p1 p2 f (MkProduct f1 f2) (LeftF g1) = p1 f f1 g1
 productCoproduct p1 p2 f (MkProduct f1 f2) (RightF g2) = p2 f f2 g2
+
+pairingCompose : Pairing f g -> Pairing h k -> Pairing (Compose f h) (Compose g k)
+pairingCompose pfg phk ff (MkCompose fha) (MkCompose gkb) = pfg (phk ff) fha gkb
 
 ||| `StateT` pairs with `StoreT`
 stateStore : Pairing f g -> Pairing (StateT s f) (StoreT s g)
