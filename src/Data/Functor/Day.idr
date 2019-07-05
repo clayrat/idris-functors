@@ -1,5 +1,6 @@
 module Data.Functor.Day
 
+import Control.Isomorphism
 import Control.Monad.Identity
 import Control.Comonad
 import Control.Comonad.Trans
@@ -20,6 +21,12 @@ day get fx gy = MkDay get fx gy
 
 dap : Applicative f => Day f f ~> f
 dap (MkDay get fx gy) = [| get fx gy |]
+
+isoTo : Pairing f g -> (Day f g ~> Identity)
+isoTo p (MkDay get fx gy) = Id $ p get fx gy
+
+isoFro : (Day f g ~> Identity) -> Pairing f g
+isoFro dit ff fa gb = runIdentity $ dit $ MkDay ff fa gb
 
 ||| Pair two `Day` convolutions when their components pair.
 pairDay : Pairing f1 f2 -> Pairing g1 g2 -> Pairing (Day f1 g1) (Day f2 g2)
