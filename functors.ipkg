@@ -5,6 +5,7 @@ sourcedir = src
 opts = "-p contrib -p comonad -p bifunctors -p profunctors"
 
 modules = Data.Functor.NatTrans
+        , Data.Functor.Const
         , Data.Functor.Product
         , Data.Functor.Coproduct
         , Data.Functor.Compose

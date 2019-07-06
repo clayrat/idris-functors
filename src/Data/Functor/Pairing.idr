@@ -9,8 +9,10 @@ import Control.Comonad.Env
 import Control.Comonad.Traced
 import Data.Functor.Adjunction
 import Data.Functor.Compose
+import Data.Functor.Const
 import Data.Functor.Product
 import Data.Functor.Coproduct
+import Data.Functor.NatTrans
 
 %access public export
 %default total
@@ -28,6 +30,12 @@ symPair p f ga fb = p (flip f) fb ga
 ||| The identity functor pairs with itself
 idPair : Pairing Identity Identity
 idPair f (Id a) (Id b) = f a b
+
+voidPair : Pairing f (Const Void)
+voidPair _ _ (MkConst v) = absurd v
+
+contraHoistPair : (h ~> f) -> Pairing f g -> Pairing h g
+contraHoistPair hf p ff ha gb = p ff (hf ha) gb
 
 strength : Functor f => a -> f b -> f (a, b)
 strength a = map (MkPair a)
