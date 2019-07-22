@@ -2,7 +2,9 @@ module Data.Functor.Kan
 
 import Control.Monad.Identity
 import Control.Isomorphism
+import Data.Functor.NatTrans
 import Data.Functor.Day
+import Data.Functor.Adjunction
 
 %access public export
 %default total
@@ -19,8 +21,8 @@ Functor (Ran j g) where
 -- generalised abstract data type: `g a` is the internal state and `j a -> x` the observer function
 -- again, the type constructors g and f are likely to be identical  
 data Lan : (j : Type -> Type) -> (g : Type -> Type) -> (x : Type) -> Type where 
-  MkLan : {a : Type} -> (j a -> x) -> g a -> Lan j g x   
-  
+  MkLan : {a : Type} -> (j a -> x) -> g a -> Lan j g x
+
 Functor (Lan j g) where 
   map f (MkLan k s) = MkLan (f . k) s
   
@@ -50,6 +52,14 @@ Coyoneda' = Lan Identity
 
 Density' : (f : Type -> Type) -> (a : Type) -> Type
 Density' f = Lan f f
+
+-- Adjunction
+
+toLan : Adjunction f g => g ~> (Lan f Identity)
+toLan = MkLan counit . Id
+
+fromLan : Adjunction f g => (Lan f Identity) ~> g
+fromLan (MkLan obs st) = left (obs . map runIdentity) st
 
 -- Dijkstra monad
 
