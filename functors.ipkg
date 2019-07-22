@@ -14,6 +14,10 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Kan
         , Data.Functor.Adjunction
         , Data.FSMCat
+        , Data.Data.Distributive
+        , Data.Data.Profunctor.Optic
+        , Data.Data.Profunctor.End
+        , Data.Data.Profunctor.Coend
         , KleisliArr.Basic
         , KleisliArr.Free
         , KleisliArr.Freer
