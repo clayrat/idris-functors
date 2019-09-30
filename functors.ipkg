@@ -10,6 +10,7 @@ modules = Data.Functor.NatTrans
         , Data.Functor.Coproduct
         , Data.Functor.Compose
         , Data.Functor.Day
+        , Data.Functor.FunDay
         , Data.Functor.Yoneda
         , Data.Functor.Kan
         , Data.Functor.Adjunction
@@ -22,7 +23,7 @@ modules = Data.Functor.NatTrans
         , KleisliArr.Free
         , KleisliArr.Freer
         , Main
-        
+
 executable = run
 
 main = Main
